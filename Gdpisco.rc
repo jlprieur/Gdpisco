@@ -1,0 +1,14 @@
+mondrian ICON "mondrian.ico"
+#define wxUSE_NO_MANIFEST 0
+
+//#include "wx/msw/wx.rc"
+
+move_right1 BITMAP "./bitmaps/move_right1.bmp"
+move_right2 BITMAP "./bitmaps/move_right2.bmp"
+move_right3 BITMAP "./bitmaps/move_right3.bmp"
+move_left1 BITMAP "./bitmaps/move_left1.bmp"
+move_left2 BITMAP "./bitmaps/move_left2.bmp"
+move_left3 BITMAP "./bitmaps/move_left3.bmp"
+zoom_plus3 BITMAP "./bitmaps/zoom_plus3.bmp"
+zoom_minus3 BITMAP "./bitmaps/zoom_minus3.bmp"
+

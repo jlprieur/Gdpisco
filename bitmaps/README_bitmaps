@@ -1,0 +1,29 @@
+1. Edit bitmaps with "gimp"
+2. Convert them to xpm with "convert"
+**************************************************************************
+To create bitmaps, xpm file are needed for linux/Mac,etc and bmp for Windows
+in wxwidgets there are two macros:
+************************************************************************
+wxIcon icon(wxICON(sample));
+// The above line is equivalent to this:
+#if defined(__WXGTK__) || defined(__WXMOTIF__)
+    wxIcon icon(sample_xpm);
+#endif
+#if defined(__WXMSW__)
+    wxIcon icon("sample");
+#endif
+************************************************************************
+// an easy and portable way to create a bitmap
+wxBitmap bmp(wxBITMAP(bmpname));
+// which is roughly equivalent to the following
+#if defined(__WXMSW__)
+    wxBitmap bmp("bmpname", wxBITMAP_TYPE_BMP_RESOURCE);
+#else // Unix
+    wxBitmap bmp(bmpname_xpm, wxBITMAP_TYPE_XPM);
+#endif
+************************************************************************
+You should always use wxICON() and wxBITMAP() macros because they work 
+for any platform (unlike the code above which doesn't deal with wxMac, wxX11, ...) and are shorter and more clear than versions with many #ifdef blocks. 
+Alternatively, you could use the same XPMs on all platforms and avoid dealing with Windows resource files.
+
+convert erase.bmp erase.xpm

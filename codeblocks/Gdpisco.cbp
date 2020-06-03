@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="Gdpisco" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="C:/EXEC/Gdpisco/Gdpisco" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="C:/EXEC/Gdpisco" />
+				<Option object_output="obj/Debug/" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add directory="C:/wxWidgets-3.1.1/include" />
+					<Add directory="C:/jlp_src/jlplib/jlp_wxplot/jlp_wxplot_include" />
+					<Add directory="C:/jlp_src/jlplib/jlp_fits" />
+					<Add directory="C:/jlp_src/jlplib/jlp_numeric" />
+					<Add directory="C:/jlp_src/jlplib/jlp_splot" />
+					<Add directory="C:/jlp_src/jlplib/jlp_gseg_wxwid" />
+					<Add directory="C:/jlp_src/jlplib/jlp_splot_idv" />
+					<Add directory="C:/jlp_src/jlplib/jlp_gsegraf/jlp_gsegraf_include" />
+					<Add directory="C:/jlp_src/jlplib/cfitsio/incl" />
+				</Compiler>
+				<Linker>
+					<Add library="C:\EXEC\MyLib\jlp_wxplot.a" />
+					<Add library="C:\EXEC\MyLib\jlp_splot.a" />
+					<Add library="C:\EXEC\MyLib\jlp_splot_idv.a" />
+					<Add library="C:\EXEC\MyLib\jlp_gsegraf.a" />
+					<Add library="C:\EXEC\MyLib\jlp_gseg_wxwid.a" />
+					<Add library="C:\EXEC\MyLib\jlp_fits.a" />
+					<Add library="C:\EXEC\MyLib\jlp_numeric.a" />
+					<Add library="C:\EXEC\MyLib\libcfitsio.a" />
+					<Add library="C:\EXEC\MyLib\libfftw3.a" />
+					<Add library="C:\wxWidgets-3.1.1\build-debug\lib\libwx_mswu_core-3.1.dll.a" />
+					<Add library="C:\wxWidgets-3.1.1\build-debug\lib\libwx_baseu-3.1.dll.a" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+		</Compiler>
+		<Unit filename="../Gdpisco.cpp" />
+		<Unit filename="../Gdpisco.rc">
+			<Option compilerVar="WINDRES" />
+		</Unit>
+		<Unit filename="../gdp_frame.h" />
+		<Unit filename="../gdp_frame_hartmann.cpp" />
+		<Unit filename="../gdp_frame_id.h" />
+		<Unit filename="../gdp_frame_logbook.cpp" />
+		<Unit filename="../gdp_frame_menu.cpp" />
+		<Unit filename="../gdp_frame_video.cpp" />
+		<Unit filename="../gdp_gdproc2.cpp" />
+		<Unit filename="../gdp_gdproc2_process.cpp" />
+		<Unit filename="../gdp_igdproc2.h" />
+		<Unit filename="../jlp_wx_overlay.cpp" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

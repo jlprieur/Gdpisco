@@ -1,0 +1,156 @@
+##################################################################
+# Makefile for Gdpisco program 
+#
+# JLP
+# Version 03-10-2014
+##################################################################
+
+# To check it, type "echo %OS%" on Windows command terminal
+ifeq ($(OS),Windows_NT)
+JLP_SYSTEM=Windows
+else
+JLP_SYSTEM=Linux
+endif
+
+##############################################################
+# Linux CENTOS6:
+##############################################################
+ifeq ($(JLP_SYSTEM),Linux)
+
+CPP=c++
+
+JLPLIB_DIR = $(JLPSRC)/jlplib
+CFITSIO_INCL_DIR=$(JLPLIB_DIR)/jlp_cfitsio/incl
+
+CXFLAGS = `wx-config --cppflags` $(MY_INCL)
+
+mylib=$(JLPLIB)/jlp
+MATHLIB = $(JLPLIB)/jlp/jlp_numeric.a $(JLPLIB)/math/libfftw3.a
+
+PATHSEP1=/
+
+#WX_LIB = -L/usr/local/lib -pthread   -lwx_baseu-2.9 -lwx_gtk2u_core-2.9
+WX_LIB := `wx-config --libs base,core`
+
+else
+##############################################################
+# Windows operating system:
+##############################################################
+
+CPP=c++
+
+# To avoid console apparition:
+NO_CONSOLE=-mwindows 
+
+# C++ flags to use with wxWidgets code 
+WX_INCLUDE_DIR= C:\\wxWidgets-3.1.1\\include
+
+# Windows: I add USE_XPM (USE_XPM is needed to have the icon)
+CXFLAGS = -DUSE_XPM -I$(WX_INCLUDE_DIR) $(MY_INCL)
+
+# Need two back slashes for Linux compatibility:
+PATHSEP1=\\
+
+JLPLIB_DIR = c:\\jlp_src\\jlplib
+CFITSIO_INCL_DIR=$(JLPLIB_DIR)\\jlp_cfitsio\\incl
+
+EXEC=c:\\EXEC
+
+mylib=c:\\EXEC\\MyLib
+MATHLIB = $(mylib)$(PATHSEP)jlp_numeric.a $(mylib)$(PATHSEP)libfftw3.a
+WX_LIB_DIR= C:\\wxWidgets-3.1.1\\build-debug\\lib
+WX_LIB = -L$(WX_LIB_DIR) -lwx_baseu-3.1 -lwx_mswu_core-3.1
+
+endif
+##############################################################
+
+#Remove extra blank before $(PATHSEP1):
+PATHSEP=$(strip $(PATHSEP1))
+
+EXEC_DIR = $(EXEC)$(PATHSEP)
+
+MY_INCL=-I. \
+	-I$(JLPLIB_DIR)$(PATHSEP)jlp_wxplot$(PATHSEP)jlp_wxplot_include \
+	-I$(JLPLIB_DIR)$(PATHSEP)jlp_splot_idv \
+	-I$(JLPLIB_DIR)$(PATHSEP)jlp_splot  \
+	-I$(JLPLIB_DIR)$(PATHSEP)jlp_gsegraf$(PATHSEP)jlp_gsegraf_include  \
+	-I$(JLPLIB_DIR)$(PATHSEP)jlp_gseg_wxwid  \
+	-I$(JLPLIB_DIR)$(PATHSEP)jlp_fits \
+	-I$(JLPLIB_DIR)$(PATHSEP)jlp_numeric \
+	-I$(CFITSIO_INCL_DIR)
+
+FITSLIB=$(mylib)$(PATHSEP)jlp_fits.a $(mylib)$(PATHSEP)libcfitsio.a 
+MY_LIB= $(mylib)$(PATHSEP)jlp_wxplot.a $(mylib)$(PATHSEP)jlp_splot.a \
+  $(mylib)$(PATHSEP)jlp_splot_idv.a $(mylib)$(PATHSEP)jlp_splot.a \
+  $(mylib)$(PATHSEP)jlp_gsegraf.a $(mylib)$(PATHSEP)jlp_gseg_wxwid.a \
+  $(mylib)$(PATHSEP)jlp_numeric.a \
+  $(MATHLIB) $(FITSLIB) -lm
+
+GD_OBJ = gdp_frame_logbook.o \
+	gdp_frame_video.o gdp_gdproc2.o gdp_gdproc2_process.o \
+	gdp_frame_menu.o gdp_frame_hartmann.o jlp_wx_overlay.o 
+
+GD_SRC = $(GD_OBJ:.o=.cpp)
+ 
+GD_DEP = gdp_frame.h gdp_frame_id.h gdp_gdproc2.h
+
+.SUFFIXES:
+.SUFFIXES: .o .cpp .exe $(SUFFIXES) 
+
+.cpp.o:
+	$(CPP) -c -g $(CXFLAGS) $*.cpp
+
+.o.exe:
+	$(CPP) -o $(EXEC_DIR)$*.exe $*.o $(GD_OBJ) $(MY_LIB) $(WX_LIB)
+
+.cpp.exe:
+	$(CPP) -c -g $(CXFLAGS) $*.cpp
+	$(CPP) -o $(EXEC_DIR)$*.exe $*.o $(GD_OBJ) $(MY_LIB) $(WX_LIB)
+
+### Targets: ###
+
+all: $(GD_OBJ) Gdpisco.exe jlp_test_julian_and_bessel.exe
+
+jlp_wx_overlay.o : jlp_wx_overlay.cpp jlp_wx_overlay.h
+
+gdp_frame_video.o: gdp_frame_video.cpp  $(GD_DEP)
+
+gdp_frame_hartmann.o: gdp_frame_hartmann.cpp  $(GD_DEP)
+
+gdp_frame_menu.o: gdp_frame_menu.cpp  $(GD_DEP)
+
+gdp_frame_logbook.o: gdp_frame_logbook.cpp  $(GD_DEP)
+
+jlp_test_julian_and_bessel.exe: jlp_test_julian_and_bessel.cpp
+	$(CPP) $(CXFLAGS) -o $(EXEC_DIR)$@ jlp_test_julian_and_bessel.cpp \
+	$(MY_LIB) -lm 
+
+########################################################
+# Linux: 
+ifeq ($(JLP_SYSTEM),Linux)
+
+Gdpisco.exe: Gdpisco.cpp  $(GD_DEP)
+
+else
+########################################################
+# Windows:
+EXEC_DIR = C:\\EXEC\\Gdpisco\\
+Gdpisco_rc.o: Gdpisco.rc
+	windres --use-temp-file --define USE_XPM -I$(WX_INCLUDE_DIR) Gdpisco.rc \
+	-o Gdpisco_rc.o --define __WXMSW__ --define NOPCH
+
+Gdpisco.exe: $(GD_OBJ) Gdpisco.cpp Gdpisco_rc.o
+	$(CPP) $(CXFLAGS) $(NO_CONSOLE) -o $(EXEC_DIR)$@ Gdpisco.cpp \
+	Gdpisco_rc.o $(GD_OBJ) $(MY_LIB) \
+	$(WX_LIB) -lm 
+# Missing DLL's:
+# libgcc_s_dw2-1.dll, libstdc++-6.dll 
+# I also tried adding the linker options: -static-libgcc -static-libstdc++
+# but it did not work.
+########################################################
+endif
+
+clear: clean
+
+clean: 
+	rm -f Gdpisco_rc.o Gdpisco.o $(GD_OBJ) 
