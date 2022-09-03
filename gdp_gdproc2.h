@@ -84,7 +84,6 @@ protected:
   int BinaryTwoStarMeasurement(double *user_x0, double *user_y0, int npts0);
   int SingleSpeckleMeasurement(double xc, double yc, double radius,
                                double *b_maxi, double *g_maxi, int interactive);
-  int AutomaticSpeckleBinaryMeasurement();
   int CosmeticPatch2(double *dble_image11, int nx11, int ny11,
                      double xc, double yc, double radius, int interactive);
   int CircularBackground2(double xc, double yc, double radius, int interactive);

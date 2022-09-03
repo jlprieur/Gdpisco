@@ -139,8 +139,9 @@ nBinariesMeasurements = 0;
   wxFileName::SplitPath(m_full_filename1, &path, &fname, &extension);
   m_filename1 = fname + _T(".") + extension;
 
-// Removes the directory name (since the full path is generally too long...)
-  SetStatusText(_T("File ") + m_filename1 + _T(" successfuly loaded"), 0);
+// Displays the filename on the status bar 
+ str1 = _T("File ") + m_filename1 + _T(" successfuly loaded");
+ SetStatusText(str1, 0);
 
  SetTitle(m_full_filename1);
 
@@ -253,6 +254,11 @@ int processing_mode0;
 
 if((initialized != 1234) || (m_panel == NULL)) return(-1);
 
+// Reset nBinariesMeasurements
+nBinariesMeasurements = 0;
+// Reset other measurements in logbook
+ClearLogbook();
+
 JLP_GDev_wxWID *Image1_gdev;
 /*
 * InteractiveProcessingMode :
@@ -267,7 +273,6 @@ JLP_GDev_wxWID *Image1_gdev;
   default:
   case 0:
    processing_mode0 = -1;
-   nBinariesMeasurements = 0;
    ClearLogbook();
    break;
   case 1:
@@ -501,15 +506,5 @@ switch (event.GetId()) {
    m_panel->FlatFieldCorrection(3);
    break;
 }
-return;
-}
-/*************************************************************************
-* Automatic measurement of binaries (for autocorrelations)
-**************************************************************************/
-void GdpFrame::OnAutoMeasureBinary(wxCommandEvent& event)
-{
-if((initialized != 1234) || (m_panel == NULL)) return;
-   m_panel->AutoMeasureAutocBinary();
-   m_panel->Refresh();
 return;
 }

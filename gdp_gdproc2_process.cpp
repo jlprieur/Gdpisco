@@ -12,6 +12,7 @@
 **************************************************************************/
 /* To define the Gdp_wx_GDProc2 class */
 #include "gdp_gdproc2.h" // Gpd_wx_GDProc2 class
+#include "jlp_process_images.h"  // CircleFromBox, etc
 
 #include "jlp_wx_image1.h" // JLP_wxImage1 class
 
@@ -116,7 +117,7 @@ int Gdp_wx_GDProc2::BinaryTwoStarMeasurement(double *user_x0, double *user_y0,
 int nx1, ny1, status, ksky;
 double xc[3], yc[3], radius[3], sum[3], npts[3], w1, mean_sky;
 double xac[2], yac[2], maxi[2], flux[2];
-double diam, v1, v2, rho, theta, theta180, Dmag;
+double diam, v1, v2, rho, theta, theta180, Dmag, xc0, yc0, radius0;
 double *dble_image1;
 register int i, k;
 wxString str1;
@@ -138,22 +139,33 @@ if(status != 0) return(-1);
 
 // SixPoints_function: two stars measurements
 for(k = 0; k < 3; k++) {
+   status = CircleFromBox2(nx1, ny1, user_x0[2 * k], user_y0[2 * k], 
+                           user_x0[2 * k + 1],
+                           user_y0[2 * k + 1], &xc0, &yc0, &radius0);
+
+   xc[k] = xc0; 
+   yc[k] = yc0; 
+   radius[k] = radius0;
+ 
+/* OLD AND BAD !
    xc[k] = user_x0[2 * k];
    yc[k] = user_y0[2 * k];
    radius[k] = sqrt(SQUARE(user_x0[2 * k] - user_x0[2 * k + 1])
                + SQUARE(user_y0[2 * k] - user_y0[ 2 * k + 1]));
+*/
    gdp_sum_circle(dble_image1, nx1, ny1, xc[k], yc[k], radius[k], &(sum[k]),
                   &(npts[k]));
 
    if(npts[k] == 0.) npts[k] = 1.;
 
-   str1.Printf(_T("%%%% k=%d xc=%.1f yc=%.1f rad=%.2f Sum=%.3g Mean=%3g\n"),
+   str1.Printf(_T("%%%% k_spot=%d xc=%.1f yc=%.1f rad=%.2f Sum=%.3g Mean=%3g\n"),
                k, xc[k], yc[k], radius[k], sum[k], sum[k]/npts[k]);
 // Write to logbook window, and to logfile ("true"):
    m_GdpFrame->WriteToLogbook(str1, true);
  }
 
 // Looking for the mean sky value:
+/* SEEMS COMPLICATED AND BAD !
 w1 = sum[0] / npts[0];
 ksky = 0;
  for(k = 1; k < 3; k++) {
@@ -162,20 +174,21 @@ ksky = 0;
      ksky = k;
    }
  }
+*/
+ksky = 2;
 mean_sky = sum[ksky] / npts[ksky];
 
 // Barycenter within the circle after removing the background:
-i = 0;
- for(k = 0; k < 3; k++) {
-   if(k != ksky) {
+ for(k = 0; k < 2; k++) {
    diam = 2. * radius[k];
    astrom_barycenter(dble_image1, nx1, ny1, xc[k], yc[k], diam, mean_sky,
-                     &(xac[i]), &(yac[i]), &(maxi[i]), &(flux[i]));
-   i++;
-   }
+                     &(xac[k]), &(yac[k]), &(maxi[k]), &(flux[k]));
+   str1.Printf(_T("%%%% k_star=%d xac=%.1f yac=%.1f maxi=%.2f flux=%3g\n"),
+               k, xac[k], yac[k], maxi[k], flux[k]);
+   m_GdpFrame->WriteToLogbook(str1, true);
  }
 // Computing rho and theta:
-/* Polar conversion relative to the center of the frame (for autocorrelations)*/
+/* Polar conversion relative to the first star: */
  v1 = xac[1] - xac[0];
  v2 = yac[1] - yac[0];
  speckle_convert_to_polar(v1, v2, &rho, &theta, &theta180);
@@ -374,177 +387,6 @@ for(i = 0; i < nx1 * ny1; i++) dble_image1[i] = saved_data[i];
 m_gdev_wxwid1->UpdateCImage1Values(dble_image1, nx1, ny1, reset_ITT_to_MinMax);
 
 delete[] dble_image1;
-delete[] saved_data;
-return(0);
-}
-/***********************************************************************
-* Automatic speckle binary measurement
-* Measure the position of the two autocorrelation peaks:
-*  start with the left button is pressed by the user
-*  and then measure the symmetric peak relative to the center of the frame
-*
-***********************************************************************/
-int Gdp_wx_GDProc2::AutomaticSpeckleBinaryMeasurement()
-{
-int nx11, ny11;
-int bad_fit, continue_anyhow, status, output_poly_order;
-int astrom_only, centered_polar_coordinates, ifail, n_for_patches;
-double *dble_image11, *saved_data;
-double mean_sky, sigma_sky, max_value, negative_percent;
-double diam, xac, yac, flux, maxi;
-char log_message[160], method[20];
-int i, i_iter;
-wxString str1;
-bool reset_ITT_to_MinMax = false;
-double xc, yc, radius, b_maxi, g_maxi;
-double rho10, theta10, error_rho10, error_theta10;
-int interactive;
-
-printf("UUU OK: Start automatic measurement\n");
-// astrom_only and centered_polar_coordinates set according to BinariesMode
-// ProcessingMode1=4 automatic measurements;
-  astrom_only = 1;
-  centered_polar_coordinates = 1;
-/// Get original data (before processing) 
-  m_image1->GetDoubleArray(&dble_image11, &nx11, &ny11);
-  saved_data = new double[nx11 * ny11];
-  for(i = 0; i < nx11 * ny11; i++) saved_data[i] = dble_image11[i];
-
-for(i_iter = 0; i_iter < 2; i_iter++) { 
-
-// Process private array dble_image1 :
-  n_for_patches = 40 + i_iter * 20;
-// Circular profile filter (processing private array dble_image1):
-  m_panel->BinaryMeasFromCircProfile(n_for_patches, &xc, &yc, &radius, 
-                                     &rho10, &theta10,
-                                     &error_rho10, &error_theta10);
-
-/**************************************************************
-* xc, yc: center (in pixels) of the center of the circle
-* radius: radius of the circle around the patch to be measured
-* b_maxi: maximum in the circle (after subtraction of the sky background)
-* g_maxi: maximum of the Gaussian (after subtraction of the sky background)
-************************************************************************/
-b_maxi = -1;
-g_maxi = -1;
-interactive = 0;
-// Speckle: BinariesMode = 1
-// Call Cosmetic Patch2 (with polynomial order = 3 by default
-// and  m_polynomial_method = 0/1 (profile/polynomial)
-// Apply this to the original image:
- status = CosmeticPatch2(dble_image11, nx11, ny11, xc, yc, radius, interactive);
-printf("UUU OK: From CosmeticPatch2 with xc=%.1f yc=%.1f radius= %.1f status=%d\n",
-        xc, yc, radius, status);
-
-// If the user is not satisfied, return from here
- if(status) {
-   fprintf(stderr," Automatic Measurements/CosmeticPatch2 Error\n");
-   delete[] saved_data;
-   return(-1);
-   }
-
-// Compute the difference (saved image - new flattened image)
-  delete[] dble_image11;
-  m_image1->GetDoubleArray(&dble_image11, &nx11, &ny11);
-  for(i = 0; i < nx11 * ny11; i++) dble_image11[i] = saved_data[i] - dble_image11[i];
-
-/* Statistics on the edges: */
-  speckle_patch_statistics(dble_image11, nx11, ny11, xc, yc, radius, &mean_sky,
-                           &sigma_sky, &max_value, &negative_percent, &bad_fit);
-printf("UUU OK: From speckle_patch_statistics \n bad_fit=%d\n",
-        bad_fit);
-
- continue_anyhow = 1;
-
- str1.Printf(_T("Background: mean=%.2f, sigma=%.2f mean/max=%.2f\
- with %d%% of negative values"),
-mean_sky, sigma_sky, mean_sky/max_value, (int)negative_percent);
-
-// Write to logbook window, but not yet to file:
-if(bad_fit == 0) {
-     m_GdpFrame->WriteToLogbook(str1 + _T(" (good fit)\n"), false);
- } else {
-     m_GdpFrame->WriteToLogbook(str1 + _T(" (bad fit)\n"), false);
-
-// I continue with the bad data:
-     continue_anyhow = 1;
- } // EOF bad_fit
-
-output_poly_order = (m_polynomial_method ? m_poly_order : -1);
-/* bad_fit=1 means that background is of good quality,
-* or that the user wants to proceed anyhow */
-if(bad_fit == 0 || continue_anyhow) {
-
-// Barycenter on the difference of the two images:
-   diam = 2. * radius;
-   status = astrom_barycenter(dble_image11, nx11, ny11, xc, yc, diam, mean_sky,
-                                &xac, &yac, &maxi, &flux);
-printf("UUU OK: From astrom_barycenter status=%d\n", status);
-   if(status) {
-     sprintf(log_message, "astrom_barycenter/Error: central patch is null!\
-Empty circle or null sum\n");
-     wxLogError(wxString(log_message, wxConvUTF8));
-   } else {
-     b_maxi = maxi;
-     strcpy(method,"Bary.");
-     astrom_output_to_logfile(xac, yac, maxi, flux, xc, yc, diam,
-                              output_poly_order, mean_sky, sigma_sky,
-                              nx11, ny11, log_message, method,
-                              astrom_only, centered_polar_coordinates);
-printf("UUU OK: From astrom_output_to_logfile xac=%.2f yac=%.2f\n", xac, yac);
-     if(bad_fit)
-       str1 = wxString(log_message, wxConvUTF8) + wxT(" (BAD FIT)\n");
-     else
-       str1 = wxString(log_message, wxConvUTF8) + wxT("\n");
-// Write measurement to logbook window, and also to file:
-    m_GdpFrame->WriteToLogbook(str1, true);
-
-// Increment the number of measurements:
-    m_GdpFrame->Increment_nbinaries_meas();
-   }
-
-/* Gaussian fit on the difference of the two images: */
-// astrom_only = 1, centered_polar_coordinates=1
-   diam = 2. * radius;
-   status = astrom_gaussian_fit(dble_image11, nx11, ny11, xc, yc, diam, mean_sky,
-                                &xac, &yac, &maxi, &flux, &ifail);
-printf("UUU OK: From astrom_gaussion_fit status=%d xac=%.2f yac=%.2f\n", 
-        status, xac, yac);
-   if(status) {
-     sprintf(log_message,"astrom_gaussian_fit/ifail = %d \n", ifail);
-     wxLogError(wxString(log_message, wxConvUTF8));
-   } else {
-   g_maxi = maxi;
-   strcpy(method,"Gauss.");
-   astrom_output_to_logfile(xac, yac, maxi, flux, xc, yc, diam,
-                            output_poly_order, mean_sky, sigma_sky,
-                            nx11, ny11, log_message, method,
-                            astrom_only, centered_polar_coordinates);
-     if(bad_fit)
-       str1 = wxString(log_message, wxConvUTF8) + wxT(" (BAD FIT)\n");
-     else
-       str1 = wxString(log_message, wxConvUTF8) + wxT("\n");
-// Write measurement to logbook window, and also to file:
-    m_GdpFrame->WriteToLogbook(str1, true);
-
-// Increment the number of measurements:
-    m_GdpFrame->Increment_nbinaries_meas();
-   }  // EOF status == 0
-
-}  // EOF bad_fit == 0 || continue_anyhow
-
-// Go back to previous version of the image:
-for(i = 0; i < nx11 * ny11; i++) dble_image11[i] = saved_data[i];
-
-// Re-display previous version of the image:
-m_gdev_wxwid1->UpdateCImage1Values(dble_image11, nx11, ny11, reset_ITT_to_MinMax);
-/// Get original data (before processing) 
-  delete[] dble_image11;
-  m_image1->GetDoubleArray(&dble_image11, &nx11, &ny11);
-  for(i = 0; i < nx11 * ny11; i++) saved_data[i] = dble_image11[i];
-} // EOF i_iter loop
-
-delete[] dble_image11;
 delete[] saved_data;
 return(0);
 }

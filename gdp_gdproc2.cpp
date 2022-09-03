@@ -161,12 +161,12 @@ if((n_down != npts1 / 2) || (n_up != npts1 / 2)) {
    return(-1);
    }
 
-for(i = 0; i < (npts1 / 2); i+=2 ) {
- m_gdev_wxwid1->ConvDevToUser(x_down[i], y_down[i], &(user_x1[i]),
-                              &(user_y1[i]), &in_frame);
+for(i = 0; i < (npts1 / 2); i++ ) {
+ m_gdev_wxwid1->ConvDevToUser(x_down[i], y_down[i], &(user_x1[2 * i]),
+                              &(user_y1[2 * i]), &in_frame);
  if(in_frame == 1) {
-   m_gdev_wxwid1->ConvDevToUser(x_up[i], y_up[i], &(user_x1[i+1]),
-                                &(user_y1[i+1]), &in_frame);
+   m_gdev_wxwid1->ConvDevToUser(x_up[i], y_up[i], &(user_x1[2 * i + 1]),
+                                &(user_y1[2 * i + 1]), &in_frame);
    }
  if(in_frame == 0) {
    fprintf(stderr,"Gdp_wx_GDProc2::DataProcessing:Error: point_up/_down nber %d out of frame !\n",
@@ -206,9 +206,6 @@ switch(ProcessingMode1) {
    break;
  case 3:
    BinaryTwoStarMeasurement(user_x1, user_y1, npts1);
-   break;
- case 4:
-   AutomaticSpeckleBinaryMeasurement();
    break;
 }
 

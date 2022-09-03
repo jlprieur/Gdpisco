@@ -40,6 +40,8 @@ void GdpFrame::ShowLogbook()
 
  m_topsizer->Show(LogPanel);
  m_topsizer->Layout();
+ menuLog->Check(ID_LOGBOOK_SHOW, true);
+ menuLog->Check(ID_LOGBOOK_HIDE, false);
 }
 /************************************************************************
 * Hiding logbook panel 
@@ -50,6 +52,8 @@ void GdpFrame::HideLogbook()
 
  m_topsizer->Hide(LogPanel);
  m_topsizer->Layout();
+ menuLog->Check(ID_LOGBOOK_SHOW, false);
+ menuLog->Check(ID_LOGBOOK_HIDE, true);
 }
 /*******************************************************************
 * Clear the logbook: erase all its content
@@ -138,16 +142,21 @@ printf("case 3\n");
 wxFileName::SplitPath(m_full_filename1, &path, &processed_fits_fname,
                       &extension);
 
-printf("DDEBUG2/original_filename=%s\n processed_filename=%s\n", 
+printf("BinariesSaveMeasurements/original_filename=%s\n processed_filename=%s\n", 
         static_cast<const char*>(original_fits_fname.c_str()),
         static_cast<const char*>(processed_fits_fname.c_str()));
 
  status = LogPanel->BinariesSaveMeasurements(original_fits_fname,
                                              processed_fits_fname);
 
- if(status == 0 && menuBinaries->FindItem(ID_BINARIES_SAVE_MEAS) != NULL)
+ if(status == 0 && menuBinaries->FindItem(ID_BINARIES_SAVE_MEAS) != NULL) {
            menuBinaries->Enable( ID_BINARIES_SAVE_MEAS, false);
- 
+// Reset the number of measurements:
+           nBinariesMeasurements = 0;
+// Reset other measurements in logbook
+           ClearLogbook();
+           }
+
 
 return(status);
 }

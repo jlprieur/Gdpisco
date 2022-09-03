@@ -84,7 +84,8 @@ MY_LIB= $(mylib)$(PATHSEP)jlp_wxplot.a $(mylib)$(PATHSEP)jlp_splot.a \
   $(mylib)$(PATHSEP)jlp_splot_idv.a $(mylib)$(PATHSEP)jlp_splot.a \
   $(mylib)$(PATHSEP)jlp_gsegraf.a $(mylib)$(PATHSEP)jlp_gseg_wxwid.a \
   $(mylib)$(PATHSEP)jlp_numeric.a \
-  $(MATHLIB) $(FITSLIB) -lm
+  $(MATHLIB) $(FITSLIB) -lm -lz
+# -lz is necessary to avoid "undefined inflateEnd"
 
 GD_OBJ = gdp_frame_logbook.o \
 	gdp_frame_video.o gdp_gdproc2.o gdp_gdproc2_process.o \

@@ -84,7 +84,6 @@ BEGIN_EVENT_TABLE(GdpFrame, wxFrame)
    EVT_TIMER(ID_TIMER, GdpFrame::OnTimer)
 
 // Automatic measurements
-   EVT_MENU(ID_AUTO_MEASURE_BINARY, GdpFrame::OnAutoMeasureBinary)
    EVT_MENU(ID_AUTO_MEASURE_HARTMANN, GdpFrame::OnAutoMeasureHartmann)
 
 // Miscellaneous:
@@ -158,6 +157,8 @@ m_StatusBar = NULL;
 menuVideo = NULL;
 m_video_timer = NULL;
 nBinariesMeasurements = 0;
+m_full_filename1 = wxEmptyString;
+// printf("m_f=>%s<\n", (const char *)m_full_filename1.mb_str());
 
 // Status bar:
 // Create a status bar with two fields at the bottom:
@@ -176,6 +177,8 @@ m_topsizer = new wxBoxSizer( wxVERTICAL );
   LogPanel = new JLP_wxLogbook(this, str1, 100, 60);
 
   wxLog::SetActiveTarget( new wxLogTextCtrl(LogPanel) );
+
+
 
 // Then create the panel with the scrolled bars:
 should_fit_inside = 0;
@@ -226,6 +229,10 @@ m_video_timer = new wxTimer(this, ID_TIMER);
 m_video_ms_delay = 100;
 
 initialized = 1234;
+
+// By default (JLP2022), hide it to have a large screen:
+// Should be called only after initialized has been set to 1234 !
+HideLogbook();
 
 return;
 }
@@ -301,15 +308,15 @@ SetHelpText( _T("Program to plot images from FITS files") );
   menuBinariesMeas->Append(ID_BINARIES_RESET,
                          _T("Reset"),
                          wxT("Erase all previous measurements (if any)"));
-  menuBinariesMeas->Append(ID_BINARIES_SIMPLE_MEAS, _T("Start simple measurements"),
-                          wxT("One measurement inside of a circle"), wxITEM_CHECK);
+  menuBinariesMeas->Append(ID_BINARIES_SIMPLE_MEAS, _T("Start autoc. simple measurements"),
+                          wxT("One speckle measurement inside of a circle"), wxITEM_CHECK);
   menuBinariesMeas->Append(ID_BINARIES_DOUBLE_MEAS,
-                         _T("Start double symmetric measurement mode"),
-                         wxT("Two measurements with one circle and its symmetric"),
+                         _T("Start autoc. double symmetric measurement mode"),
+                         wxT("Two speckle measurements with one circle and its symmetric"),
                          wxITEM_CHECK);
   menuBinariesMeas->Append(ID_BINARIES_TWOSTARS_MEAS,
-                         _T("Start two stars (Lucky imaging) measurement mode"),
-                         wxT("Measurements with 3 circles: two stars and background"),
+                         _T("Start long exp. two stars (Lucky imaging) measurement mode"),
+                         wxT("Measurements of Lucky imag. with 3 circles: two stars and background"),
                          wxITEM_CHECK);
   menuBinariesMeas->Append(ID_BINARIES_AUTO_MEAS,
                          _T("Start automatic measurement mode"),
