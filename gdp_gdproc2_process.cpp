@@ -24,7 +24,7 @@
 
 /* Contains:
   int DoubleSpeckleMeasurement(int nx1, int ny1, double xc, double yc,
-                               double radius);
+                               double radius, int with_Dmag);
   int BinaryTwoStarMeasurement(double *x_down, double *y_down,
                               double *x_up, double *y_up);
   int SingleSpeckleMeasurement(double xc, double yc, double radius,
@@ -43,9 +43,10 @@
 * INPUT:
 *  xc, yc : coordinates of the circle center entered by the user (user coord.)
 *  radius : radius of the circle entered by the user (user coord.)
+*  with_Dmag : flag set to 1 if Dmag is computed and added to the measurements
 ***********************************************************************/
 int Gdp_wx_GDProc2::DoubleSpeckleMeasurement(double xc,  double yc,
-                                              double radius)
+                                              double radius, int with_Dmag)
 {
 int nx1, ny1, x_center, y_center, status;
 double b_maxi_1, g_maxi_1, b_maxi_2, g_maxi_2;
@@ -77,26 +78,28 @@ if(radius <= 0) return(-1);
 
 // Compute Delta mag:
 // if DVA cross-correlations:
-  b_delta_mag = -1;
-  g_delta_mag = -1;
-  b_dmag[0] = '\0';
-  g_dmag[0] = '\0';
-  if(b_maxi_1 > 0 && b_maxi_2 > 0) {
-     b_delta_mag = 2.5 * log10(b_maxi_1 / b_maxi_2);
-     if(b_delta_mag < 0) b_delta_mag *= -1.;
-     sprintf(b_dmag,"Dm=%.2f (Bary.) ", b_delta_mag);
-     }
-  if(g_maxi_1 > 0 && g_maxi_2 > 0) {
-     g_delta_mag = 2.5 * log10(g_maxi_1 / g_maxi_2);
-     if(g_delta_mag < 0) g_delta_mag *= -1.;
-     sprintf(g_dmag,"Dm=%.2f (Gauss.)", g_delta_mag);
-     }
-  if(b_delta_mag > 0 || g_delta_mag > 0) {
-     str1 = wxT("%% ") + wxString(b_dmag, wxConvUTF8)
-            + wxString(g_dmag, wxConvUTF8) + wxT("\n");
+  if(with_Dmag == 1) {
+    b_delta_mag = -1;
+    g_delta_mag = -1;
+    b_dmag[0] = '\0';
+    g_dmag[0] = '\0';
+    if(b_maxi_1 > 0 && b_maxi_2 > 0) {
+       b_delta_mag = 2.5 * log10(b_maxi_1 / b_maxi_2);
+       if(b_delta_mag < 0) b_delta_mag *= -1.;
+       sprintf(b_dmag,"Dm=%.2f (Bary.) ", b_delta_mag);
+       }
+    if(g_maxi_1 > 0 && g_maxi_2 > 0) {
+       g_delta_mag = 2.5 * log10(g_maxi_1 / g_maxi_2);
+       if(g_delta_mag < 0) g_delta_mag *= -1.;
+       sprintf(g_dmag,"Dm=%.2f (Gauss.)", g_delta_mag);
+       }
+    if(b_delta_mag > 0 || g_delta_mag > 0) {
+       str1 = wxT("%% ") + wxString(b_dmag, wxConvUTF8)
+              + wxString(g_dmag, wxConvUTF8) + wxT("\n");
 // Write measurement to logbook window, and also to file:
-     m_GdpFrame->WriteToLogbook(str1, true);
-   } // EOF b_delta_mag > 0
+       m_GdpFrame->WriteToLogbook(str1, true);
+     } // EOF b_delta_mag > 0
+   }
 
 return(0);
 }

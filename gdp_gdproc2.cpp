@@ -59,6 +59,7 @@ return;
 * 2=autocorrelation double measurement (speckle or DVA)
 * 3=two-star measurement (long integration, e.g., Lucky Imaging)
 * 4=automatic speckle measurement
+* 5=DMag autocorrelation measurement
 *
 * Input:
 *  processing_mode: interactive processing mode
@@ -77,6 +78,7 @@ ProcessingMode1 = processing_mode;
 * 2=autocorrelation double measurement (speckle or DVA)
 * 3=two-star measurement (long integration, e.g., Lucky Imaging)
 * 4=automatic speckle measurement
+* 5=DMag autocorrelation measurement
 */
 
 // Set limits box type: 0=none 1=line, 2=rectangle, 3=circle
@@ -113,6 +115,11 @@ switch(processing_mode) {
     LimitsBoxType1 = 0;
     n_PointsRequired1 = 1;
     break;
+  case 5:
+    help_text1 = wxT("DMag autoc. measurement: click and drag left button to select a peak");
+    LimitsBoxType1 = 3;
+    n_PointsRequired1 = 2;
+    break;
 }
 
 return(0);
@@ -127,6 +134,7 @@ return(0);
 * 2=autocorrelation double measurement (speckle or DVA)
 * 3=two-star measurement (long integration, e.g., Lucky Imaging)
 * 4=automatic speckle measurement
+* 5=DMag autocorrelation measurement
 *
 * Input:
 *  x_down, y_down, n_down: (device coord) x,y and number of points
@@ -143,7 +151,7 @@ int Gdp_wx_GDProc2::DataProcessing(double *x_down, double *y_down, int n_down,
 double *array, user_x1[6], user_y1[6];
 double wwx, wwy, xc, yc, radius, b_maxi, g_maxi;
 int nx1, ny1, npts1, in_frame;
-int i, status, interactive_mode;
+int i, status, interactive_mode, with_Dmag;
 wxString results;
 
 m_image1->GetDoubleArray(&array, &nx1, &ny1);
@@ -184,6 +192,7 @@ for(i = 0; i < (npts1 / 2); i++ ) {
 * 2=autocorrelation double measurement (speckle or DVA)
 * 3=two-star measurement (long integration, e.g., Lucky Imaging)
 * 4=automatic speckle measurement
+* 5=DMag autocorrelation measurement
 */
 switch(ProcessingMode1) {
  default:
@@ -202,10 +211,17 @@ switch(ProcessingMode1) {
  case 2:
    status = CircleFromBox2(nx1, ny1, user_x1[0], user_y1[0], user_x1[1],
                            user_y1[1], &xc, &yc, &radius);
-   if(status == 0) DoubleSpeckleMeasurement(xc, yc, radius);
+   with_Dmag = 0;
+   if(status == 0) DoubleSpeckleMeasurement(xc, yc, radius, with_Dmag);
    break;
  case 3:
    BinaryTwoStarMeasurement(user_x1, user_y1, npts1);
+   break;
+ case 5:
+   status = CircleFromBox2(nx1, ny1, user_x1[0], user_y1[0], user_x1[1],
+                           user_y1[1], &xc, &yc, &radius);
+   with_Dmag = 1;
+   if(status == 0) DoubleSpeckleMeasurement(xc, yc, radius, with_Dmag);
    break;
 }
 

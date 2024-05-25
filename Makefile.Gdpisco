@@ -43,23 +43,33 @@ CPP=c++
 NO_CONSOLE=-mwindows 
 
 # C++ flags to use with wxWidgets code 
-WX_INCLUDE_DIR= C:\\wxWidgets-3.1.1\\include
+WX_INCLUDE_DIR= C:\\wxWidgets-3.2.4\\include
 
 # Windows: I add USE_XPM (USE_XPM is needed to have the icon)
-CXFLAGS = -DUSE_XPM -I$(WX_INCLUDE_DIR) $(MY_INCL)
+CXFLAGS = `c:/wxWidgets-3.2.4/build_jlp_32bits/wx-config --cppflags` \
+	-DUSE_XPM -I$(WX_INCLUDE_DIR) $(MY_INCL) \
+	-D__WXMSW__ -D_WINSOCK2API_
+#62 bits:
+CXFLAGS = `c:/wxWidgets-3.2.4/build-jlp/wx-config --cppflags` \
+	-DUSE_XPM -I$(WX_INCLUDE_DIR) $(MY_INCL) \
+	-D__WXMSW__ -D_WINSOCK2API_
 
 # Need two back slashes for Linux compatibility:
 PATHSEP1=\\
 
-JLPLIB_DIR = c:\\jlp_src\\jlplib
+JLPLIB_DIR = c:\\jlp\\src\\jlplib
 CFITSIO_INCL_DIR=$(JLPLIB_DIR)\\jlp_cfitsio\\incl
 
 EXEC=c:\\EXEC
 
 mylib=c:\\EXEC\\MyLib
 MATHLIB = $(mylib)$(PATHSEP)jlp_numeric.a $(mylib)$(PATHSEP)libfftw3.a
-WX_LIB_DIR= C:\\wxWidgets-3.1.1\\build-debug\\lib
+WX_LIB_DIR= c:\\wxWidgets-3.2.4\\build_jlp_32bits\\lib
+WX_LIB_DIR= c:\\wxWidgets-3.2.4\\build-jlp\\lib
 WX_LIB = -L$(WX_LIB_DIR) -lwx_baseu-3.1 -lwx_mswu_core-3.1
+WX_LIB := `c:/wxWidgets-3.2.4/build_jlp_32bits/wx-config --libs`
+WX_LIB = -L$(WX_LIB_DIR) -lwx_baseu-3.2-i686-w64-mingw32 -lwx_mswu_core-3.2-i686-w64-mingw32
+WX_LIB := `c:/wxWidgets-3.2.4/build-jlp/wx-config --libs base,core`
 
 endif
 ##############################################################
@@ -68,7 +78,6 @@ endif
 PATHSEP=$(strip $(PATHSEP1))
 
 EXEC_DIR = $(EXEC)$(PATHSEP)
-
 MY_INCL=-I. \
 	-I$(JLPLIB_DIR)$(PATHSEP)jlp_wxplot$(PATHSEP)jlp_wxplot_include \
 	-I$(JLPLIB_DIR)$(PATHSEP)jlp_splot_idv \
@@ -110,7 +119,8 @@ GD_DEP = gdp_frame.h gdp_frame_id.h gdp_gdproc2.h
 
 ### Targets: ###
 
-all: $(GD_OBJ) Gdpisco.exe jlp_test_julian_and_bessel.exe
+## all: $(GD_OBJ) Gdpisco.exe jlp_test_julian_and_bessel.exe
+all: $(GD_OBJ) Gdpisco.exe
 
 jlp_wx_overlay.o : jlp_wx_overlay.cpp jlp_wx_overlay.h
 
@@ -135,6 +145,7 @@ Gdpisco.exe: Gdpisco.cpp  $(GD_DEP)
 else
 ########################################################
 # Windows:
+EXEC_DIR = C:\\EXEC\\Gdpisco_32\\
 EXEC_DIR = C:\\EXEC\\Gdpisco\\
 Gdpisco_rc.o: Gdpisco.rc
 	windres --use-temp-file --define USE_XPM -I$(WX_INCLUDE_DIR) Gdpisco.rc \
@@ -142,8 +153,7 @@ Gdpisco_rc.o: Gdpisco.rc
 
 Gdpisco.exe: $(GD_OBJ) Gdpisco.cpp Gdpisco_rc.o
 	$(CPP) $(CXFLAGS) $(NO_CONSOLE) -o $(EXEC_DIR)$@ Gdpisco.cpp \
-	Gdpisco_rc.o $(GD_OBJ) $(MY_LIB) \
-	$(WX_LIB) -lm 
+	Gdpisco_rc.o $(GD_OBJ) $(MY_LIB) $(WX_LIB) -lcurl  
 # Missing DLL's:
 # libgcc_s_dw2-1.dll, libstdc++-6.dll 
 # I also tried adding the linker options: -static-libgcc -static-libstdc++

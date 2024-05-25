@@ -92,10 +92,12 @@ if(change_filename) {
 strncpy(filename1, m_full_filename1.mb_str(), 120);
 status = JLP_RDFITS_2D_dble(&dble_image0, &nx0, &ny0, &nz0, iframe, filename1,
                              comments1, errmess1);
-if (status) {
+if (status != 0) {
+  str1.Printf("\n Error loading image from %s (status=%d)\n %s\n",
+          filename1, status, errmess1);
   fprintf(stderr, "Error loading image from %s (status=%d)\n %s\n",
           filename1, status, errmess1);
-  wxLogError(_T("Couldn't load image from '") + m_full_filename1 + _T("'."));
+  wxLogError(_T("Couldn't load image from '") + m_full_filename1 + str1 + _T("'."));
   return(-2);
   }
 /* TOBEDONE later: use (in gdp_utils.cpp)
@@ -181,6 +183,7 @@ return(0);
 *
   ID_BINARIES_SIMPLE_MEAS,
   ID_BINARIES_DOUBLE_MEAS,
+  ID_BINARIES_DMAG_MEAS,
   ID_BINARIES_TWOSTARS_MEAS,
   ID_BINARIES_AUTO_MEAS
 
@@ -191,6 +194,7 @@ return(0);
 * 2=autocorrelation double measurement (speckle or DVA)
 * 3=two-star measurement (long integration, e.g., Lucky Imaging)
 * 4=automatic speckle measurement
+* 5=autocorrelation Dmag measurement
 **************************************************************************/
 void GdpFrame::OnBinariesStartMeasurement(wxCommandEvent& event)
 {
@@ -202,6 +206,8 @@ if(initialized != 1234) return;
          menuBinaries->Check( ID_BINARIES_SIMPLE_MEAS, false);
  if(menuBinaries->FindItem(ID_BINARIES_DOUBLE_MEAS) != NULL)
          menuBinaries->Check( ID_BINARIES_DOUBLE_MEAS, false);
+ if(menuBinaries->FindItem(ID_BINARIES_DMAG_MEAS) != NULL)
+         menuBinaries->Check( ID_BINARIES_DMAG_MEAS, false);
  if(menuBinaries->FindItem(ID_BINARIES_TWOSTARS_MEAS) != NULL)
          menuBinaries->Check( ID_BINARIES_TWOSTARS_MEAS, false);
  if(menuBinaries->FindItem(ID_BINARIES_AUTO_MEAS) != NULL)
@@ -222,6 +228,11 @@ switch (event.GetId()) {
    BinariesStartMeasurement1(2);
    if(menuBinaries->FindItem(ID_BINARIES_DOUBLE_MEAS) != NULL)
            menuBinaries->Check( ID_BINARIES_DOUBLE_MEAS, true);
+   break;
+ case ID_BINARIES_DMAG_MEAS:
+   BinariesStartMeasurement1(5);
+   if(menuBinaries->FindItem(ID_BINARIES_DMAG_MEAS) != NULL)
+           menuBinaries->Check( ID_BINARIES_DMAG_MEAS, true);
    break;
  case ID_BINARIES_TWOSTARS_MEAS:
    BinariesStartMeasurement1(3);
@@ -245,6 +256,7 @@ return;
 * 2=autocorrelation double measurement (speckle or DVA)
 * 3=two-star measurement (long integration, e.g., Lucky Imaging)
 * 4=automatic measurement
+* 5=autocorrelation Dmag measurement
 ***********************************************************************/
 int GdpFrame::BinariesStartMeasurement1(int ioption)
 {
@@ -253,11 +265,6 @@ int status = -1;
 int processing_mode0;
 
 if((initialized != 1234) || (m_panel == NULL)) return(-1);
-
-// Reset nBinariesMeasurements
-nBinariesMeasurements = 0;
-// Reset other measurements in logbook
-ClearLogbook();
 
 JLP_GDev_wxWID *Image1_gdev;
 /*
@@ -268,17 +275,23 @@ JLP_GDev_wxWID *Image1_gdev;
 * 2=autocorrelation double measurement (speckle or DVA)
 * 3=two-star measurement (long integration, e.g., Lucky Imaging)
 * 4=automatic speckle measurement
+* 5=autocorrelation Dmag measurement
 */
  switch(ioption) {
   default:
+// Reset:
   case 0:
    processing_mode0 = -1;
+// Reset nBinariesMeasurements
+   nBinariesMeasurements = 0;
+// Reset other measurements in logbook
    ClearLogbook();
    break;
   case 1:
   case 2:
   case 3:
   case 4:
+  case 5:
    processing_mode0 = ioption;
    break;
  }
@@ -316,6 +329,8 @@ if(initialized != 1234) return;
            menuBinaries->Check( ID_BINARIES_SIMPLE_MEAS, false);
    if(menuBinaries->FindItem(ID_BINARIES_DOUBLE_MEAS) != NULL)
            menuBinaries->Check( ID_BINARIES_DOUBLE_MEAS, false);
+   if(menuBinaries->FindItem(ID_BINARIES_DMAG_MEAS) != NULL)
+           menuBinaries->Check( ID_BINARIES_DMAG_MEAS, false);
    if(menuBinaries->FindItem(ID_BINARIES_TWOSTARS_MEAS) != NULL)
            menuBinaries->Check( ID_BINARIES_TWOSTARS_MEAS, false);
    if(menuBinaries->FindItem(ID_BINARIES_AUTO_MEAS) != NULL)
@@ -372,6 +387,7 @@ return;
 * 2=autocorrelation double measurement (speckle or DVA)
 * 3=two-star measurement (long integration, e.g., Lucky Imaging)
 * 4=automatic speckle measurement
+* 5=DMag autocorrelation measurement
 ***********************************************************************/
 int GdpFrame::ListFromCursor_Start()
 {

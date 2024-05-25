@@ -5,7 +5,7 @@
 * Derived from Gdisp1.cpp
 *
 * JLP
-* Version 23/02/2017
+* Version 05/11/2022
 ****************************************************************************/
 #include <stdlib.h>   // exit()
 #include "time.h"
@@ -59,10 +59,15 @@ BEGIN_EVENT_TABLE(GdpFrame, wxFrame)
              GdpFrame::OnBinariesStartMeasurement)
    EVT_MENU (ID_BINARIES_DOUBLE_MEAS,
              GdpFrame::OnBinariesStartMeasurement)
+   EVT_MENU (ID_BINARIES_DMAG_MEAS,
+             GdpFrame::OnBinariesStartMeasurement)
    EVT_MENU (ID_BINARIES_TWOSTARS_MEAS,
              GdpFrame::OnBinariesStartMeasurement)
+// For later: 
+#ifdef AUTOMT
    EVT_MENU (ID_BINARIES_AUTO_MEAS,
              GdpFrame::OnBinariesStartMeasurement)
+#endif
    EVT_MENU (ID_BINARIES_SAVE_MEAS, GdpFrame::OnBinariesSaveMeasurements)
 
 // Logbook (from menu):
@@ -314,14 +319,21 @@ SetHelpText( _T("Program to plot images from FITS files") );
                          _T("Start autoc. double symmetric measurement mode"),
                          wxT("Two speckle measurements with one circle and its symmetric"),
                          wxITEM_CHECK);
+  menuBinariesMeas->Append(ID_BINARIES_DMAG_MEAS,
+                         _T("Start DVA double measurement mode (for Dmag)"),
+                         wxT("Two speckle measurements with one circle and its symmetric (for DVA autocorrelations)"),
+                         wxITEM_CHECK);
   menuBinariesMeas->Append(ID_BINARIES_TWOSTARS_MEAS,
                          _T("Start long exp. two stars (Lucky imaging) measurement mode"),
                          wxT("Measurements of Lucky imag. with 3 circles: two stars and background"),
                          wxITEM_CHECK);
+// For later:
+#ifdef AUTOMT
   menuBinariesMeas->Append(ID_BINARIES_AUTO_MEAS,
                          _T("Start automatic measurement mode"),
                          wxT("Automatic speckle measurements"),
                          wxITEM_CHECK);
+#endif
   menuBinaries->Append(wxID_ANY, wxT("Measurement mode selection"),
                        menuBinariesMeas,
                        _T("Select measurement mode"));
@@ -332,8 +344,12 @@ SetHelpText( _T("Program to plot images from FITS files") );
 
 menuBinaries->Check( ID_BINARIES_SIMPLE_MEAS, false);
 menuBinaries->Check( ID_BINARIES_DOUBLE_MEAS, false);
+menuBinaries->Check( ID_BINARIES_DMAG_MEAS, false);
 menuBinaries->Check( ID_BINARIES_TWOSTARS_MEAS, false);
+// For later:
+#ifdef AUTOMT
 menuBinaries->Check( ID_BINARIES_AUTO_MEAS, false);
+#endif
 menuBinaries->Enable( ID_BINARIES_SAVE_MEAS, false);
 
 // ***************** Logbook menu ******************************
@@ -405,8 +421,11 @@ void GdpFrame::Gdp_ResetAllOptionsOfImageMenu()
     EnableSaveBinariesMeasurements(false);
     menuBinaries->Check( ID_BINARIES_SIMPLE_MEAS, false);
     menuBinaries->Check( ID_BINARIES_DOUBLE_MEAS, false);
+    menuBinaries->Check( ID_BINARIES_DMAG_MEAS, false);
     menuBinaries->Check( ID_BINARIES_TWOSTARS_MEAS, false);
+#ifdef AUTOMT
     menuBinaries->Check( ID_BINARIES_AUTO_MEAS, false);
+#endif
     menuBinaries->Enable( ID_BINARIES_SAVE_MEAS, false);
   }
 
@@ -427,7 +446,7 @@ printf("OnQuit: calling Close\n");
 void GdpFrame::OnHelp( wxCommandEvent& WXUNUSED(event) )
 {
  (void)wxMessageBox(_T("Sorry: \"Help\" is not implemented yet\n")
-                    _T("Current version: 23 Feb 2017"),
+                    _T("Current version: Nov 5th 2022"),
                     _T("Gdpisco"),
                      wxICON_INFORMATION | wxOK );
 }
@@ -437,7 +456,7 @@ void GdpFrame::OnHelp( wxCommandEvent& WXUNUSED(event) )
 void GdpFrame::OnAbout( wxCommandEvent& WXUNUSED(event) )
 {
  (void)wxMessageBox( _T("Gdpisco\n")
-                     _T("Jean-Louis Prieur (c) 2017\n")
+                     _T("Jean-Louis Prieur (c) 2022\n")
                      _T("Created with wxWidgets"), _T("Gdpisco"),
                      wxICON_INFORMATION | wxOK );
 }

@@ -80,7 +80,8 @@ protected:
 * 4=automatic speckle binary measurement
 ***********************************************************************/
 
-  int DoubleSpeckleMeasurement(double xc, double yc, double radius);
+  int DoubleSpeckleMeasurement(double xc, double yc, double radius, 
+                               int with_Dmag);
   int BinaryTwoStarMeasurement(double *user_x0, double *user_y0, int npts0);
   int SingleSpeckleMeasurement(double xc, double yc, double radius,
                                double *b_maxi, double *g_maxi, int interactive);
